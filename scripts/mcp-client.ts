@@ -38,12 +38,35 @@ const cache = new PluginCache({
   defaultTTL: TTL.FIVE_MINUTES,
 });
 
+/** Detects auth-related errors from MCP server responses (Microsoft Graph + generic HTTP). */
+function isAuthError(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes("no valid token") ||
+    lower.includes("token expired") ||
+    lower.includes("unauthorized") ||
+    lower.includes("401") ||
+    lower.includes("invalid_grant") ||
+    lower.includes("interaction_required") ||
+    lower.includes("login required") ||
+    lower.includes("unauthenticated") ||
+    lower.includes("invalidauthenticationtoken") ||
+    lower.includes("lifetimevalidationfailed") ||
+    lower.includes("compacttoken") ||
+    lower.includes("authorization_identitynotfound")
+  );
+}
+
 export class OutlookMCPClient {
   private client: Client | null = null;
   private transport: StdioClientTransport | null = null;
   private config: MCPConfig;
   private connected: boolean = false;
+  private connectPromise: Promise<void> | null = null;
   private cacheDisabled: boolean = false;
+
+  /** Set to true before calling auth commands (login, verify-login, list-tools) to skip pre-flight auth check. */
+  public skipAuthCheck = false;
 
   constructor() {
     // When compiled, __dirname is dist/, so look in parent for config.json
@@ -86,10 +109,17 @@ export class OutlookMCPClient {
   // CONNECTION MANAGEMENT
   // ============================================
 
-  /** Establishes connection to the MCP server. */
+  /** Establishes connection to the MCP server with pre-flight auth check. */
   async connect(): Promise<void> {
-    if (this.connected) return;
+    if (this.connectPromise) return this.connectPromise;
+    this.connectPromise = this.doConnect().catch(err => {
+      this.connectPromise = null; // Reset so next attempt can retry after re-auth
+      throw err;
+    });
+    return this.connectPromise;
+  }
 
+  private async doConnect(): Promise<void> {
     const env = {
       ...process.env,
       ...this.config.mcpServer.env,
@@ -108,6 +138,38 @@ export class OutlookMCPClient {
 
     await this.client.connect(this.transport);
     this.connected = true;
+
+    // Pre-flight auth check (skipped for login/verify-login/list-tools)
+    if (!this.skipAuthCheck) {
+      await this.checkAuth();
+    }
+  }
+
+  /**
+   * Verifies OAuth token validity by calling verify-login directly on the MCP SDK.
+   * Uses this.client!.callTool() (raw SDK) — NOT this.callTool() which would recurse via connect().
+   */
+  private async checkAuth(): Promise<void> {
+    const result = await this.client!.callTool({ name: "verify-login", arguments: {} });
+    const content = result.content as Array<{ type: string; text?: string }>;
+    const text = content.find(c => c.type === "text")?.text || "";
+
+    let authenticated = false;
+    try {
+      const parsed = JSON.parse(text);
+      authenticated = parsed?.authenticated === true || parsed?.status === "authenticated";
+    } catch {
+      authenticated = text.toLowerCase().includes("authenticated");
+    }
+
+    if (!authenticated) {
+      throw new Error(
+        "AUTHENTICATION_REQUIRED: Outlook OAuth token is expired or missing. " +
+        "Do NOT retry this operation. " +
+        "Ask the user to re-authenticate their personal Outlook account (YOUR_PERSONAL_EMAIL) " +
+        "by running the login command in a terminal with browser access."
+      );
+    }
   }
 
   /** Disconnects from the MCP server. */
@@ -115,6 +177,7 @@ export class OutlookMCPClient {
     if (this.client && this.connected) {
       await this.client.close();
       this.connected = false;
+      this.connectPromise = null;
     }
   }
 
@@ -137,8 +200,16 @@ export class OutlookMCPClient {
     const content = result.content as Array<{ type: string; text?: string }>;
 
     if (result.isError) {
-      const errorContent = content.find((c) => c.type === "text");
-      throw new Error(errorContent?.text || "Tool call failed");
+      const errorText = content.find((c) => c.type === "text")?.text || "Tool call failed";
+      if (isAuthError(errorText)) {
+        throw new Error(
+          "AUTHENTICATION_REQUIRED: " + errorText +
+          " Do NOT retry this operation." +
+          " Ask the user to re-authenticate their personal Outlook account (YOUR_PERSONAL_EMAIL)" +
+          " by running the login command in a terminal with browser access."
+        );
+      }
+      throw new Error(errorText);
     }
 
     const textContent = content.find((c) => c.type === "text");

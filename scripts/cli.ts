@@ -13,6 +13,7 @@ const commands = {
   "list-tools": createCommand(
     z.object({}),
     async (_args, client: OutlookMCPClient) => {
+      client.skipAuthCheck = true;
       const tools = await client.listTools();
       return tools.map((t: { name: string; description?: string }) => ({
         name: t.name,
@@ -25,13 +26,19 @@ const commands = {
   // ==================== Authentication ====================
   "login": createCommand(
     z.object({}),
-    async (_args, client: OutlookMCPClient) => client.login(),
+    async (_args, client: OutlookMCPClient) => {
+      client.skipAuthCheck = true;
+      return client.login();
+    },
     "Authenticate with Microsoft"
   ),
 
   "verify-login": createCommand(
     z.object({}),
-    async (_args, client: OutlookMCPClient) => client.verifyLogin(),
+    async (_args, client: OutlookMCPClient) => {
+      client.skipAuthCheck = true;
+      return client.verifyLogin();
+    },
     "Check authentication status"
   ),
 

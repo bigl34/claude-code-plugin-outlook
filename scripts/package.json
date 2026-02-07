@@ -9,13 +9,13 @@
     "start": "node dist/cli.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@local/cli-utils": "github:YOUR_GITHUB_USER/claude-code-plugin-shared",
     "@local/plugin-cache": "github:YOUR_GITHUB_USER/claude-code-plugin-cache",
-    "@local/cli-utils": "github:YOUR_GITHUB_USER/claude-code-plugin-shared"
+    "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "tsx": "^4.0.0"
+    "@types/node": "^20.19.32",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.3"
   }
 }

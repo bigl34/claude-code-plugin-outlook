@@ -108,27 +108,6 @@ All CLI commands output JSON. Parse the JSON response and present relevant infor
 - For business processes → suggest appropriate system
 
 ## Self-Documentation
-
-Log to: `/home/USER/biz/plugin-learnings/outlook-email-manager.md`
-
-### Auto-Logging Triggers
-- **Errors**: API failures, auth issues, unexpected responses
-- **Retries**: Operation required multiple attempts
-- **Corrections**: Main Claude corrected your approach
-- **Discoveries**: API quirks, workarounds, undocumented behavior
-
-### Timing
-- **Immediate**: Critical errors - log before returning
-- **Reflection**: Minor issues - review before completing task
-
-### Categories
-- `[ISSUE]` - Problems, errors, failures
-- `[DISCOVERY]` - Useful findings, workarounds
-
-### Format
-```markdown
-### [YYYY-MM-DD] [ISSUE|DISCOVERY] Brief description
-**Context**: What you were doing
-**Problem/Finding**: What happened
-**Resolution**: How to handle it
-```
+Log API quirks/errors to: `/home/USER/biz/plugin-learnings/outlook-email-manager.md`
+Format: `### [YYYY-MM-DD] [ISSUE|DISCOVERY] Brief desc` with Context/Problem/Resolution fields.
+Full workflow: `~/biz/docs/reference/agent-shared-context.md`
