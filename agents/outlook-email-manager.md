@@ -14,11 +14,11 @@ You manage all interactions with the user's personal Outlook account, keeping pe
 ## Available Tools
 
 You interact with Outlook using the CLI scripts via Bash. The CLI is located at:
-`/home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/cli.ts`
+`/Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/cli.ts`
 
 ### CLI Commands
 
-Run commands using: `node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js <command> [options]`
+Run commands using: `node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js <command> [options]`
 
 #### Authentication Commands
 | Command | Description | Required Options |
@@ -60,19 +60,19 @@ Run commands using: `node /home/USER/.claude/plugins/local-marketplace/outlook-e
 
 ```bash
 # List recent inbox messages
-node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js list-messages --top 10
+node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js list-messages --top 10
 
 # Get a specific email
-node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js get-message --id "AAMkAG..."
+node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js get-message --id "AAMkAG..."
 
 # Send an email
-node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
+node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
 
 # Get calendar events for a date range
-node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
+node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
 
 # Search for emails
-node /home/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js search --query "invoice"
+node /Users/USER/.claude/plugins/local-marketplace/outlook-email-manager/scripts/dist/cli.js search --query "invoice"
 ```
 
 ## Operational Guidelines
@@ -108,6 +108,6 @@ All CLI commands output JSON. Parse the JSON response and present relevant infor
 - For business processes → suggest appropriate system
 
 ## Self-Documentation
-Log API quirks/errors to: `/home/USER/biz/plugin-learnings/outlook-email-manager.md`
+Log API quirks/errors to: `/Users/USER/biz/plugin-learnings/outlook-email-manager.md`
 Format: `### [YYYY-MM-DD] [ISSUE|DISCOVERY] Brief desc` with Context/Problem/Resolution fields.
 Full workflow: `~/biz/docs/reference/agent-shared-context.md`
