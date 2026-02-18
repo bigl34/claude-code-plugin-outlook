@@ -3,7 +3,7 @@
 
 Personal Outlook/MS365 email and calendar operations
 
-![Version](https://img.shields.io/badge/version-1.2.6-blue) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Node >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![Version](https://img.shields.io/badge/version-1.2.7-blue) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Node >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 
 ## Features
 
@@ -50,19 +50,19 @@ node scripts/dist/cli.js login
 
 ```bash
 # List recent inbox messages
-node scripts/dist/cli.js list-messages --top 10
+node /Users/USER/node scripts/dist/cli.js list-messages --top 10
 
 # Get a specific email
-node scripts/dist/cli.js get-message --id "AAMkAG..."
+node /Users/USER/node scripts/dist/cli.js get-message --id "AAMkAG..."
 
 # Send an email
-node scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
+node /Users/USER/node scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
 
 # Get calendar events for a date range
-node scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
+node /Users/USER/node scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
 
 # Search for emails
-node scripts/dist/cli.js search --query "invoice"
+node /Users/USER/node scripts/dist/cli.js search --query "invoice"
 ```
 
 ## How It Works
