@@ -19,7 +19,7 @@ Personal Outlook/MS365 email and calendar operations
 ## Quick Start
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USER/claude-code-plugin-outlook.git
+git clone https://github.com/bigl34/claude-code-plugin-outlook.git
 cd claude-code-plugin-outlook
 cp config.template.json config.json  # fill in your credentials
 cd scripts && npm install
