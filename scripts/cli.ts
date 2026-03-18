@@ -5,8 +5,29 @@
  * Zod-validated CLI for Outlook/MS365 operations via MCP.
  */
 
-import { z, createCommand, runCli, cacheCommands, cliTypes } from "@local/cli-utils";
+import { z, createCommand, runCli, cacheCommands, cliTypes, wrapUntrustedField, buildSafeOutput } from "@local/cli-utils";
 import { OutlookMCPClient } from "./mcp-client.js";
+
+// ==================== Content Safety Helpers ====================
+
+function wrapMessageItem(msg: any) {
+  return {
+    metadata: {
+      id: msg.id,
+      receivedDateTime: msg.receivedDateTime,
+      isRead: msg.isRead,
+      hasAttachments: msg.hasAttachments,
+      importance: msg.importance,
+      conversationId: msg.conversationId,
+    },
+    content: {
+      subject: wrapUntrustedField("subject", msg.subject, { maxChars: 500 }),
+      senderName: wrapUntrustedField("senderName", msg.from?.emailAddress?.name, { maxChars: 200 }),
+      senderEmail: wrapUntrustedField("senderEmail", msg.from?.emailAddress?.address, { maxChars: 200 }),
+      bodyPreview: wrapUntrustedField("bodyPreview", msg.bodyPreview, { maxChars: 500 }),
+    },
+  };
+}
 
 // Define commands with Zod schemas
 const commands = {
@@ -49,12 +70,19 @@ const commands = {
       skip: cliTypes.int(0).optional().describe("Skip results"),
       filter: z.string().optional().describe("OData filter"),
       orderBy: z.string().optional().describe("Sort order"),
+      search: z.string().optional().describe("Full-text search query (KQL syntax)"),
     }),
     async (args, client: OutlookMCPClient) => {
-      const { top, skip, filter, orderBy } = args as {
-        top?: number; skip?: number; filter?: string; orderBy?: string;
+      const { top, skip, filter, orderBy, search } = args as {
+        top?: number; skip?: number; filter?: string; orderBy?: string; search?: string;
       };
-      return client.listMailMessages({ top, skip, filter, orderBy });
+      const result = await client.listMailMessages({ top, skip, filter, orderBy, search }) as any;
+      const messages = result?.value ?? [];
+      const wrappedMessages = messages.map(wrapMessageItem);
+      return buildSafeOutput(
+        { command: "list-messages", count: messages.length },
+        { messages: wrappedMessages }
+      );
     },
     "List inbox messages"
   ),
@@ -73,7 +101,13 @@ const commands = {
     }),
     async (args, client: OutlookMCPClient) => {
       const { folderId, top, skip } = args as { folderId: string; top?: number; skip?: number };
-      return client.listMailFolderMessages(folderId, { top, skip });
+      const result = await client.listMailFolderMessages(folderId, { top, skip }) as any;
+      const messages = result?.value ?? [];
+      const wrappedMessages = messages.map(wrapMessageItem);
+      return buildSafeOutput(
+        { command: "list-folder-messages", count: messages.length },
+        { messages: wrappedMessages }
+      );
     },
     "List messages in a folder"
   ),
@@ -84,7 +118,44 @@ const commands = {
     }),
     async (args, client: OutlookMCPClient) => {
       const { id } = args as { id: string };
-      return client.getMailMessage(id);
+      const msg = await client.getMailMessage(id) as any;
+
+      const contentFields: Record<string, unknown> = {
+        subject: wrapUntrustedField("subject", msg?.subject, { maxChars: 500 }),
+        senderName: wrapUntrustedField("senderName", msg?.from?.emailAddress?.name, { maxChars: 200 }),
+        senderEmail: wrapUntrustedField("senderEmail", msg?.from?.emailAddress?.address, { maxChars: 200 }),
+        body: wrapUntrustedField("body", msg?.body?.content, {
+          maxChars: 8000,
+          convertHtml: msg?.body?.contentType === "html",
+        }),
+      };
+
+      // Wrap toRecipients display names
+      if (Array.isArray(msg?.toRecipients)) {
+        contentFields.toRecipients = msg.toRecipients.map((r: any, i: number) =>
+          wrapUntrustedField(`toRecipient[${i}]`, r?.emailAddress?.name ?? r?.emailAddress?.address, { maxChars: 200 })
+        );
+      }
+
+      // Wrap attachment filenames
+      if (msg?.hasAttachments && Array.isArray(msg?.attachments)) {
+        contentFields.attachmentNames = msg.attachments.map((a: any, i: number) =>
+          wrapUntrustedField(`attachment[${i}]`, a?.name, { maxChars: 200 })
+        );
+      }
+
+      return buildSafeOutput(
+        {
+          id: msg?.id,
+          receivedDateTime: msg?.receivedDateTime,
+          sentDateTime: msg?.sentDateTime,
+          isRead: msg?.isRead,
+          hasAttachments: msg?.hasAttachments,
+          importance: msg?.importance,
+          conversationId: msg?.conversationId,
+        },
+        contentFields
+      );
     },
     "Get a specific message"
   ),
@@ -275,7 +346,23 @@ const commands = {
     }),
     async (args, client: OutlookMCPClient) => {
       const { query, entityTypes } = args as { query: string; entityTypes?: string };
-      return client.search(query, entityTypes);
+      const result = await client.search(query, entityTypes) as any;
+      const hits = result?.value?.[0]?.hitsContainers?.[0]?.hits ?? [];
+      const wrappedHits = hits.map((hit: any) => buildSafeOutput(
+        {
+          hitId: hit?.hitId,
+          rank: hit?.rank,
+        },
+        {
+          summary: wrapUntrustedField("summary", hit?.summary, { maxChars: 500 }),
+          subject: wrapUntrustedField("subject", hit?.resource?.subject, { maxChars: 500 }),
+          senderName: wrapUntrustedField("senderName", hit?.resource?.from?.emailAddress?.name, { maxChars: 200 }),
+        }
+      ));
+      return buildSafeOutput(
+        { command: "search", query, count: hits.length },
+        { hits: wrappedHits }
+      );
     },
     "Search across MS365"
   ),

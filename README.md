@@ -3,7 +3,7 @@
 
 Personal Outlook/MS365 email and calendar operations
 
-![Version](https://img.shields.io/badge/version-1.2.8-blue) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Node >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![Version](https://img.shields.io/badge/version-1.4.0-blue) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Node >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 
 ## Features
 
@@ -39,14 +39,6 @@ node scripts/dist/cli.js login
    ```
 4. Ensure the MCP server binary is available on your system (see the service's documentation)
 
-## Configuration
-
-Copy `config.template.json` to `config.json` and fill in the required values:
-
-| Field | Placeholder |
-|-------|-------------|
-| `credentials_path` | `/path/to/your/credentials` |
-
 ## Available Commands
 
 | Command        | Description                 | Required Options |
@@ -58,19 +50,19 @@ Copy `config.template.json` to `config.json` and fill in the required values:
 
 ```bash
 # List recent inbox messages
-node /Users/USER/node scripts/dist/cli.js list-messages --top 10
+node $HOME/node scripts/dist/cli.js list-messages --top 10
 
 # Get a specific email
-node /Users/USER/node scripts/dist/cli.js get-message --id "AAMkAG..."
+node $HOME/node scripts/dist/cli.js get-message --id "AAMkAG..."
 
 # Send an email
-node /Users/USER/node scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
+node $HOME/node scripts/dist/cli.js send-mail --to "friend@example.com" --subject "Hello" --body "How are you?"
 
 # Get calendar events for a date range
-node /Users/USER/node scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
+node $HOME/node scripts/dist/cli.js get-calendar-view --start "2024-01-01T00:00:00Z" --end "2024-01-07T23:59:59Z"
 
 # Search for emails
-node /Users/USER/node scripts/dist/cli.js search --query "invoice"
+node $HOME/node scripts/dist/cli.js search --query "invoice"
 ```
 
 ## How It Works

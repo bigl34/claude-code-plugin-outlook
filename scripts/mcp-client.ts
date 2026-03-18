@@ -255,7 +255,7 @@ export class OutlookMCPClient {
    *
    * @cached TTL: 5 minutes
    */
-  async listMailMessages(options?: { top?: number; skip?: number; filter?: string; orderBy?: string }): Promise<any> {
+  async listMailMessages(options?: { top?: number; skip?: number; filter?: string; orderBy?: string; search?: string }): Promise<any> {
     const cacheKey = createCacheKey("mail_messages", options || {});
     return cache.getOrFetch(
       cacheKey,
@@ -265,6 +265,7 @@ export class OutlookMCPClient {
         if (options?.skip) args.skip = options.skip;
         if (options?.filter) args.filter = options.filter;
         if (options?.orderBy) args.orderBy = options.orderBy;
+        if (options?.search) args.search = `"${options.search}"`;
         return this.callTool("list-mail-messages", args);
       },
       { ttl: TTL.FIVE_MINUTES, bypassCache: this.cacheDisabled }
@@ -595,9 +596,18 @@ export class OutlookMCPClient {
     return cache.getOrFetch(
       cacheKey,
       async () => {
-        const args: Record<string, any> = { query };
-        if (entityTypes) args.entityTypes = entityTypes;
-        return this.callTool("search", args);
+        const types = entityTypes ? entityTypes.split(",").map(t => t.trim()) : ["message"];
+        const body = {
+          requests: [
+            {
+              entityTypes: types,
+              query: { queryString: query },
+              from: 0,
+              size: 25
+            }
+          ]
+        };
+        return this.callTool("search-query", { body });
       },
       { ttl: TTL.FIVE_MINUTES, bypassCache: this.cacheDisabled }
     );
